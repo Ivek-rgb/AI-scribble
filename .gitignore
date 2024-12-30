@@ -1,4 +1,5 @@
-data/training-set/
+data/training-set/doodles_data/*
+data/training-set/number_data/* 
 
 .env/Lib/site-packages/*
 !.env/Lib/site-packages/pip/
