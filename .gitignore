@@ -6,3 +6,5 @@ data/training-set/number_data/*
 !.env/Lib/site-packages/pip/**
 !.env/Lib/site-packages/pip-24.2.dist-info/
 !.env/Lib/site-packages/pip-24.2.dist-info/**
+
+!.gitkeep
