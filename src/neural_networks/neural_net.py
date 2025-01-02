@@ -1,7 +1,11 @@
-import math
 import numpy as np
-import random as rand
-        
+
+# Toy neural netowrk, 1 hidden layer 
+# SGD and Batch training plans to choose
+# Ability to change learning rate along with decay algorithm
+
+# TODO: multi hidden layer neural network capabilities  
+
 class ToyNeuralNetwork: 
     
     class __ActivationFunction: 
@@ -28,10 +32,27 @@ class ToyNeuralNetwork:
             self.update_functions()
             self.outer_instance.activation = "relu"
         
+        # TODO: finda a way to implement softmax implements               
         def softmax(self): 
-            self.outer_instance.activation = "softmax" # TODO: overflow fix for softmax activation function required            
+            self.outer_instance.activation = "softmax"   
+        
+    class __DecayFunction: 
+        
+        def __init__(self, outer_instance, decay_rate): 
+            self.outer_instance = outer_instance
+            self.decay_rate = decay_rate
+            self.decay_function = None
+            self.exponentional_decay() 
+        
+        def change_decay_rate(self, new_decay_rate): 
+            self.outer_instance.decay_rate = new_decay_rate
+            self.decay_rate = new_decay_rate
+        
+        def exponentional_decay(self): 
+            self.decay_function = lambda x, y: x * np.exp( - self.decay_rate * y) 
+            
     
-    def __init__(self, num_i : int, num_h : int, num_o : int, learn_rate = 0.1, activation = "sigmoid"): 
+    def __init__(self, num_i : int, num_h : int, num_o : int, learn_rate = 0.1, decay_rate = 0.01, activation = "sigmoid"): 
         
         self.num_i = num_i
         self.num_h = num_h
@@ -40,12 +61,13 @@ class ToyNeuralNetwork:
         self.vec_func = None
         self.vec_dfunc = None
         
+        self.epoch = 0 
+        
         self.a_func =  self.__ActivationFunction(self)
         
-        self.activation = activation
-        if activation == "softmax":
-            self.vec_func_output = lambda x: np.exp(x) / np.sum(np.exp(x))
+        self.decay_control = self.__DecayFunction(self, decay_rate) 
         
+        self.activation = activation
         self.learn_rate = learn_rate
         
         self.weights_ih = np.random.uniform(-1, 1, size=(self.num_h, self.num_i))
@@ -53,66 +75,99 @@ class ToyNeuralNetwork:
         
         self.bias_h = np.random.uniform(-1, 1, size=(self.num_h, 1))
         self.bias_o = np.random.uniform(-1, 1, size=(self.num_o, 1))
+    
+    # TODO: add softmax function for clamping data to percentages 
+    @staticmethod
+    def softmax(values : np.ndarray) -> np.ndarray: 
+    
+        return np.exp(values) / np.sum(np.exp(values), axis=0)
         
+    @staticmethod
+    def dsoftmax(values: np.ndarray) -> np.ndarray: 
+    
+        jacobian_matrix = np.diag(values) - np.outer(values, values)
+        return jacobian_matrix  
+    
+    
+    def predict_softmax(self, input): 
         
-    def predict(self, input): 
+        return self.predict(input, True)
+    
+        
+    def predict(self, input) -> np.ndarray: 
 
         input = np.array(input).reshape(-1, 1)
 
-        h_value = self.weights_ih @ input
-        h_value += self.bias_h
+        h_value = (self.weights_ih @ input) + self.bias_h
         h_value = self.vec_func(h_value)
         
-        o_value = self.weights_ho @ h_value 
-        o_value += self.bias_o
+        o_value = (self.weights_ho @ h_value) + self.bias_o
+        o_value = self.vec_func(o_value)
         
-        if self.activation == "softmax":
-            o_value = np.exp(o_value) / np.sum(np.exp(o_value))
-        else:
-            o_value = self.vec_func(o_value)
-        return o_value
+        return o_value 
     
-    def train(self, inputs, expected_answer): 
+    
+    def __calc_hidden(self, inputs : np.ndarray) -> np.ndarray: 
+
+        hidden = self.weights_ih @ inputs + self.bias_h
+        return self.vec_func(hidden)
+    
+    
+    def __calc_gradient(self, errors : np.ndarray, guess_arr : np.ndarray) -> np.ndarray: 
+
+        gradient_output = self.vec_dfunc(guess_arr) * errors 
+        return gradient_output * self.learn_rate
+    
+    
+    @staticmethod
+    def __adjust_weights(weights_ref : np.ndarray, bias_ref : np.ndarray, weights_delta : np.ndarray, gradient_ref : np.ndarray, inputs_size : int) -> np.ndarray: 
+        
+        weights_ref += weights_delta
+        bias_ref += np.sum(gradient_ref, axis=1, keepdims=True) / inputs_size
+        
+        
+    @staticmethod 
+    def __calculate_delta_field(weights_ref : np.ndarray, gradient_field : np.ndarray, inputs_size : int) -> np.ndarray: 
+        
+        return gradient_field @ np.transpose(weights_ref) / inputs_size
+
+    
+    def reset_epoch(self): 
+        self.epoch = 0
+
+
+    def train(self, inputs, expected_answers) -> None: 
+        
+        self.learn_rate = self.decay_control.decay_function(self.learn_rate, self.epoch)
         
         inputs = np.array(inputs).reshape(-1, 1)
-        expected_answer = np.array(expected_answer).reshape(-1, 1)
-
-        hidden = self.weights_ih @ inputs
-        hidden += self.bias_h
+        expected_answers = np.array(expected_answers).reshape(-1, 1)
         
-        hidden = self.vec_func(hidden)
-
+        hidden = self.__calc_hidden(inputs) 
         guess = self.predict(inputs)
         
-        output_errors = expected_answer - guess
+        output_errors = expected_answers - guess
         
-        gradient_output = self.vec_dfunc(guess) * output_errors 
-        gradient_output *= self.learn_rate        
+        gradient_output = self.__calc_gradient(output_errors, guess)
 
         weights_ho_transposed = np.transpose(self.weights_ho)
-
+        
+        weights_ho_delta = self.__calculate_delta_field(hidden, gradient_output, inputs.shape[1]) 
+        
+        self.__adjust_weights(self.weights_ho, self.bias_o, weights_ho_delta, gradient_output, inputs.shape[1])
+        
         hidden_errors = weights_ho_transposed @ output_errors
         
-        weights_ho_delta =  gradient_output @ np.transpose(hidden)
-        
-        self.weights_ho += weights_ho_delta
-        self.bias_o += gradient_output
-        
-        hidden_gradient = self.vec_dfunc(hidden) * hidden_errors
-        hidden_gradient *= self.learn_rate
-        
-        weights_ih_transposed = np.transpose(inputs)
-        weigths_ih_delta = hidden_gradient @ weights_ih_transposed
-        
-        self.weights_ih += weigths_ih_delta
-        self.bias_h += hidden_gradient
+        gradient_hidden = self.__calc_gradient(hidden_errors, hidden) 
 
-    # TODO: 50/50 to add feature, sequential training works good for small model like this     
-    def train_batch():
-        pass
-    
+        weights_ih_delta = self.__calculate_delta_field(inputs, gradient_hidden, inputs.shape[1]) 
+        
+        self.__adjust_weights(self.weights_ih, self.bias_h, weights_ih_delta, gradient_hidden, inputs.shape[1])
+        
+        self.epoch += 1
+
     # serialize model 
-    def save_model(): 
+    def save_model(dir: str): 
         pass
     
     # deserialize model  
