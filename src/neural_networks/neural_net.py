@@ -1,35 +1,43 @@
 import math
 import numpy as np
 import random as rand
+import json
+import os
         
-class ToyNeuralNetwork: 
+class __ActivationFunction: 
     
-    class __ActivationFunction: 
+    def __init__(self, function, functiond):
+        #self.outer_instance = outer_instance 
+        self.function = function
+        self.dfunction = functiond
+        #self.sigmoid()
         
-        def __init__(self, outer_instance):
-            self.outer_instance = outer_instance 
-            self.function = None
-            self.dfunction = None
-            self.sigmoid()
-            
-        def update_functions(self): 
-            self.outer_instance.vec_func = np.vectorize(self.function)
-            self.outer_instance.vec_dfunc = np.vectorize(self.dfunction)
-            
-        def sigmoid(self):
-            self.function = lambda x: 1 / (1 + np.exp(-x))
-            self.dfunction = lambda y: y * (1 - y)
-            self.update_functions()
-            self.outer_instance.activation = "sigmoid"
-                        
-        def relu(self): 
-            self.function = lambda x : max(0, x)
-            self.dfunction = lambda y : 0. if y < 0. else 1.
-            self.update_functions()
-            self.outer_instance.activation = "relu"
+    def update_functions(self): 
+        self.outer_instance.vec_func = np.vectorize(self.function)
+        self.outer_instance.vec_dfunc = np.vectorize(self.dfunction)
         
-        def softmax(self): 
-            self.outer_instance.activation = "softmax" # TODO: overflow fix for softmax activation function required            
+    def sigmoid(self):
+        self.function = lambda x: 1 / (1 + np.exp(-x))
+        self.dfunction = lambda y: y * (1 - y)
+        self.update_functions()
+        #self.outer_instance.activation = "sigmoid"
+                    
+    def relu(self): 
+        self.function = lambda x : max(0, x)
+        self.dfunction = lambda y : 0. if y < 0. else 1.
+        self.update_functions()
+        #self.outer_instance.activation = "relu"
+    
+    def softmax(self): 
+        #self.outer_instance.activation = "softmax" # TODO: overflow fix for softmax activation function required 
+        pass
+
+class ToyNeuralNetwork: 
+
+    activation_functions = {
+        "sigmoid" : __ActivationFunction(lambda x: 1 / (1 + np.exp(-x)), lambda y: y * (1 - y)),
+        "relu": __ActivationFunction(...)
+    }       
     
     def __init__(self, num_i : int, num_h : int, num_o : int, learn_rate = 0.1, activation = "sigmoid"): 
         
@@ -37,10 +45,10 @@ class ToyNeuralNetwork:
         self.num_h = num_h
         self.num_o = num_o
         
-        self.vec_func = None
-        self.vec_dfunc = None
+        self.vec_func = self.activation_functions[activation].function
+        self.vec_dfunc = self.activation_functions[activation].dfunction
         
-        self.a_func =  self.__ActivationFunction(self)
+        #self.a_func =  self.activation_functions[activation]
         
         self.activation = activation
         if activation == "softmax":
@@ -111,8 +119,33 @@ class ToyNeuralNetwork:
     def train_batch():
         pass
     
+    def toJSON(self):
+        print(self.num_i)
+        print(self.num_h)
+        print(self.num_o)
+        print(self.vec_func)
+        print(self.vec_dfunc)
+        #print(self.a_func)
+        print(self.activation)
+        print(self.learn_rate)
+        print(self.weights_ih)
+        print(self.weights_ho)
+        print(self.bias_h)
+        print(self.bias_o)
+        return json.dumps(
+            self,
+            default=lambda o: o.__dict__, 
+            sort_keys=True,
+            indent=4)
+
     # serialize model 
-    def save_model(): 
+    def save_model(self): 
+        jsonFile = self.toJSON()
+        home_dir = os.path.expanduser("~")
+        file_path = os.path.join(home_dir, "neuralNetworkData.json")
+        f = open(file_path, "w")
+        f.write(jsonFile)
+        f.close()
         pass
     
     # deserialize model  
