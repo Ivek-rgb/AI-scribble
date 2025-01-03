@@ -4,9 +4,10 @@ from neural_networks import neural_net as nn, test_train_data as tt_data
 def main():
     
     network = nn.ToyNeuralNetwork(784, 74, 10)
+    loader = data_prep.DataLoader('../data/training-set/number_data/mnist_train.csv')
 
-    train_data = None # data_prep.load_data_csv_nums('../data/training-set/number_data/mnist_train.csv', 7000)
-    test_data = None # data_prep.load_data_csv_nums('../data/training-set/number_data/mnist_train.csv', 1000)
+    train_data = loader.load_data_csv_nums(7000)
+    test_data = loader.load_data_csv_nums(1000)
     
     #data_prep.visualize_array(train_data[0]["data"])
     
