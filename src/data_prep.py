@@ -36,9 +36,8 @@ def visualize_array(array):
 
 def deserialize_numbers_data(row : str):
     number_label, *data = map( lambda x : float(x), row.split(','))
-    return [number_label, data]    
+    return [number_label, data]  
 
-#TODO: create interface for data or atleast object to handle it better
 def load_data_csv_nums(dir : str, limit = math.inf):
     with open(dir, newline='', encoding='utf-8') as training_data: 
         reader = csv.reader(training_data, delimiter='\t')
