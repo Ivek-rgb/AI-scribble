@@ -5,4 +5,7 @@ data/training-set/number_data/*
 .env/
 .env/*
 
+src/models/*
+src/models/
+
 !.gitkeep
