@@ -62,7 +62,7 @@ class DataLoader:
                 counter += 1
         self.data = return_formatted_data
         return return_formatted_data
-    
+
     def custom_mapper(self, func):
         for cell in self.data:
             cell["data"] = list(map(func, cell["data"]))
