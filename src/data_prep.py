@@ -21,7 +21,7 @@ class DataLoader:
             if reshape_to_2828: 
                 new_npz = [] 
                 for i in range(len(loaded_np_rep)):
-                    x = np.reshape(loaded_np_rep[i], (-1, 28, 28, 1))
+                    x = np.reshape(loaded_np_rep[i], (28, 28, 1))
                     new_npz.append(x)
                 loaded_np_rep = new_npz 
             data.append(loaded_np_rep)
