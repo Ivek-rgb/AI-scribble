@@ -50,9 +50,8 @@ class ToyNeuralNetwork:
         
         def exponentional_decay(self): 
             self.decay_function = lambda x, y: x * np.exp( - self.decay_rate * y) 
-            
-    
-    def __init__(self, num_i : int, num_h : int, num_o : int, learn_rate = 0.1, decay_rate = 0.01, activation = "sigmoid"): 
+        
+    def __init__(self, num_i : int, num_h : tuple[int], num_o : int, learn_rate = 0.1, decay_rate = 0.01, activation = "sigmoid"): 
         
         self.num_i = num_i
         self.num_h = num_h
@@ -70,11 +69,19 @@ class ToyNeuralNetwork:
         self.activation = activation
         self.learn_rate = learn_rate
         
-        self.weights_ih = np.random.uniform(-1, 1, size=(self.num_h, self.num_i))
-        self.weights_ho = np.random.uniform(-1, 1, size=(self.num_o, self.num_h))
+        self.weights_ih = np.random.uniform(-1, 1, size=(self.num_h[0], self.num_i))
         
-        self.bias_h = np.random.uniform(-1, 1, size=(self.num_h, 1))
+        self.weights_hh = [
+            
+            np.random.uniform(-1, 1, size=(self.num_h[i + 1], self.num_h[i])) for i in range(len(num_h) - 1)
+        
+        ]
+        
+        self.weights_ho = np.random.uniform(-1, 1, size=(self.num_o, self.num_h[len(self.num_h) - 1]))
+        
+        self.bias_h =  [ np.random.uniform(-1, 1, size=(i, 1)) for i in self.num_h ]
         self.bias_o = np.random.uniform(-1, 1, size=(self.num_o, 1))
+        
     
     # TODO: add softmax function for clamping data to percentages 
     @staticmethod
@@ -89,29 +96,34 @@ class ToyNeuralNetwork:
         return jacobian_matrix  
     
     
-    def predict_softmax(self, input): 
-        
-        return self.predict(input, True)
+    def dropout(self, activations : np.ndarray, rate):
     
+        mask = (np.random.rand(*activations.shape) > rate).astype(float)
+        return activations * mask / (1 - rate)  
+    
+    
+    def _forward_pass(self, inputs): 
         
-    def predict(self, input) -> np.ndarray: 
+        inputs = np.array(inputs).reshape(-1, 1)
+        
+        activations = [inputs]
+        
+        h_value = self.vec_func((self.weights_ih @ inputs) + self.bias_h[0])
+        
+        activations.append(h_value)
+        
+        for i in range(len(self.weights_hh)): 
+            h_value = self.vec_func((self.weights_hh[i] @ h_value) + self.bias_h[i + 1])
+            h_value = self.dropout(h_value, 0.001) # TODO: add dropout range to shizzle fadizzle 
+            activations.append(h_value)
+        
+        activations.append(self.vec_func((self.weights_ho @ h_value) + self.bias_o))
+        
+        return activations
+        
+    def predict(self, inputs) -> np.ndarray: 
 
-        input = np.array(input).reshape(-1, 1)
-
-        h_value = (self.weights_ih @ input) + self.bias_h
-        h_value = self.vec_func(h_value)
-        
-        o_value = (self.weights_ho @ h_value) + self.bias_o
-        o_value = self.vec_func(o_value)
-        
-        return o_value 
-    
-    
-    def __calc_hidden(self, inputs : np.ndarray) -> np.ndarray: 
-
-        hidden = self.weights_ih @ inputs + self.bias_h
-        return self.vec_func(hidden)
-    
+        return self._forward_pass(inputs)[-1]
     
     def __calc_gradient(self, errors : np.ndarray, guess_arr : np.ndarray) -> np.ndarray: 
 
@@ -133,36 +145,44 @@ class ToyNeuralNetwork:
 
     
     def reset_epoch(self): 
+        
         self.epoch = 0
-
 
     def train(self, inputs, expected_answers) -> None: 
         
-        self.learn_rate = self.decay_control.decay_function(self.learn_rate, self.epoch)
+        self.learn_rate = self.decay_control.decay_function(self.learn_rate, self.epoch) 
         
         inputs = np.array(inputs).reshape(-1, 1)
         expected_answers = np.array(expected_answers).reshape(-1, 1)
         
-        hidden = self.__calc_hidden(inputs) 
-        guess = self.predict(inputs)
+        activations = self._forward_pass(inputs)
+                
+        hidden = activations[-2] 
+        guess = activations[-1]
         
-        output_errors = expected_answers - guess
+        output_errors = expected_answers - activations[-1]
         
         gradient_output = self.__calc_gradient(output_errors, guess)
 
-        weights_ho_transposed = np.transpose(self.weights_ho)
-        
         weights_ho_delta = self.__calculate_delta_field(hidden, gradient_output, inputs.shape[1]) 
         
         self.__adjust_weights(self.weights_ho, self.bias_o, weights_ho_delta, gradient_output, inputs.shape[1])
         
-        hidden_errors = weights_ho_transposed @ output_errors
+        hidden_errors = np.transpose(self.weights_ho) @ output_errors
         
-        gradient_hidden = self.__calc_gradient(hidden_errors, hidden) 
+        for i in range(len(self.weights_hh) -1, -1, -1): 
+
+            gradient_hidden = self.__calc_gradient(hidden_errors, activations[i + 2])
+            weights_hh_delta = self.__calculate_delta_field(activations[i + 1], gradient_hidden, inputs.shape[1])
+            
+            self.__adjust_weights(self.weights_hh[i], self.bias_h[i + 1], weights_hh_delta, gradient_hidden, inputs.shape[1]); 
+            hidden_errors = np.transpose(self.weights_hh[i]) @ hidden_errors
+        
+        gradient_hidden = self.__calc_gradient(hidden_errors, activations[1]) 
 
         weights_ih_delta = self.__calculate_delta_field(inputs, gradient_hidden, inputs.shape[1]) 
         
-        self.__adjust_weights(self.weights_ih, self.bias_h, weights_ih_delta, gradient_hidden, inputs.shape[1])
+        self.__adjust_weights(self.weights_ih, self.bias_h[0], weights_ih_delta, gradient_hidden, inputs.shape[1])
         
         self.epoch += 1
 
