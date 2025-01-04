@@ -2,7 +2,6 @@ from keras.src.models import Sequential
 from keras.src.layers import Dense, Dropout, Conv2D, MaxPooling2D, Flatten, BatchNormalization
 from keras.api.saving import load_model
 import numpy as np
-
 import os 
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 
@@ -11,9 +10,9 @@ class NeuralModelError(Exception):
         self.message = message
         super.__init__(self.message)
 
+# TODO: add support for graphics libraries 
 class NeuralModels: 
     
-    MODEL_SAVE_PATH = '../models/'
     FILE_EXTENSION = '.keras'
     
     def __init__(self): 
@@ -103,16 +102,16 @@ class NeuralModels:
         return self.model.predict(prediction_data, verbose=verbose)
     
     # TODO: prompt user if the model has not been saved yet / add desc for this functions 
-    def save_model(self): 
-        self.model.save(self.MODEL_SAVE_PATH + self.model_name_tag + self.FILE_EXTENSION)
+    def save_model(self, path): 
+        self.model.save(path + self.model_name_tag + self.FILE_EXTENSION)
         print("Model saved!")
     
-    def save_as_model(self, new_name): 
+    def save_as_model(self, path, new_name): 
         self.model_name_tag = new_name
-        self.save_model()
+        self.save_model(path)
     
-    def load_model(self, name_of_model): 
-        self.model = load_model(self.MODEL_SAVE_PATH + name_of_model + self.FILE_EXTENSION)
-        self.model_name_tag = name_of_model
+    def load_model(self, path): 
+        self.model = load_model(path)
+        self.model_name_tag = os.path.splitext(os.path.basename(path))[0]
         print("Model has been loaded!")
     

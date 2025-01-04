@@ -14,16 +14,17 @@ def main():
     neural_model.conv2D_model((28, 28, 1), (32, 64), [(3,3)], (2,2), ["relu", "relu", "relu", "softmax"], (512, 10), [0.25, 0.5]) 
     neural_model.model_compile()
 
-
-    loader = data_prep.DataLoader() 
+    loader_train = data_prep.DataLoader('../data/training-set/number_data/mnist_train.csv') 
+    loader_test = data_prep.DataLoader('../data/training-set/number_data/mnist_test.csv') 
     
-    train_data = loader.load_data_csv_nums('../data/training-set/number_data/mnist_train.csv', 60000)
-    test_data = loader.load_data_csv_nums('../data/training-set/number_data/mnist_test.csv', 1000)
+    loader_train.load_data_csv_nums(15000)
+    loader_test.load_data_csv_nums(1000)
+    #test_data = loader.load_data_csv_nums('../data/training-set/number_data/mnist_test.csv', 1000)
     
     #print("prije")
-    #print(test_data[0])
-    test_data = loader.custom_mapper(lambda x : x/50)
-       
+    train_data = loader_train.custom_mapper(lambda x : x / 255)
+    test_data = loader_test.custom_mapper(lambda x: x / 255)
+        
     #print("posli")
     #print(test_data[0])
 
@@ -38,8 +39,6 @@ def main():
     train_x = np.array(list(map(lambda x: np.array(x).reshape(28, 28, 1), train_x)))
     train_y = np.array(train_y)
 
-    train_x = train_x / 255
-
     neural_model.fit(train_x, train_y, epochs=10, batch_size=1000, verbose=0)     
     
     #for row in train_data:
@@ -47,7 +46,6 @@ def main():
 
     err_count = 0
     
-    # do not forget to expand dims for prediction gamer 
     for row in test_data:
         row_data = row["data"]
         row_data = np.array(row_data).reshape(-1, 28, 28, 1)
@@ -55,11 +53,10 @@ def main():
         #output_list = network.predict(list(map(lambda x : x / 255, row["data"]))).reshape(1, -1).tolist()[0]
         if output_list.index(max(output_list)) != row["label"].index(max(row["label"])): 
             err_count += 1
-            
                         
-    print((err_count / len(test_data)) * 100, "% wrong guesses")
+    print((err_count / len(loader_test.data)) * 100, "% wrong guesses")
     
-    neural_model.save_as_model('conv2D_number_model_1')
+    neural_model.save_as_model('./models/', 'conv2D_number_model_1')
     
 if __name__ == '__main__': 
     main()
