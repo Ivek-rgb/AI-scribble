@@ -14,6 +14,16 @@ def main():
     neural_model.conv2D_model((28, 28, 1), (32, 64), [(3,3)], (2,2), ["relu", "relu", "relu", "softmax"], (512, 10), [0.25, 0.5]) 
     neural_model.model_compile()
 
+    npy_loader = data_prep.DataLoader('../data/training-set/doodles_data/')
+    
+    loaded_data = npy_loader.load_data_npy('../data/training-set/doodles_data/', True) # resizeamo na 28, 28, 1 zbog korištenja konvolucijske mreže  
+
+    print(len(loaded_data)) # broj dataseta odnosno kategorija crteža (jabuka, lav), koliko .npy fileova imaš 
+    print(len(loaded_data[0])) # broj primjeraka unutar dataseta za jednu kategoriju crteža (jabuka, lav), koliko primjera crteža ima za prvu kategoriju 
+    loaded_data = np.array(loaded_data)
+    
+    return # ovo kasnije je za brojeve pa ću samo to omittat preko return-a 
+
     loader_train = data_prep.DataLoader('../data/training-set/number_data/mnist_train.csv') 
     loader_test = data_prep.DataLoader('../data/training-set/number_data/mnist_test.csv') 
     
@@ -35,7 +45,7 @@ def main():
     train_x = list(map(lambda x: x["data"], train_data))
     train_y = list(map(lambda x: x["label"], train_data))
     
-    #TODO: reshaping tutorial for data_prep extensions to finally rest in peace
+    #TODO: reshaping tutorial for data_prep extensions
     train_x = np.array(list(map(lambda x: np.array(x).reshape(28, 28, 1), train_x)))
     train_y = np.array(train_y)
 

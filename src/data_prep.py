@@ -15,18 +15,17 @@ class DataLoader:
 
     def load_data_npy(self, dir : str, reshape_to_2828 : bool = False): 
         data = []
-        files = [os.path.join(dir, file) for file in os.listdir(dir) if os.path.isfile(os.path.join(dir, file))]
+        files = [os.path.join(dir, file) for file in os.listdir(dir) if os.path.isfile(os.path.join(dir, file)) and os.path.splitext(file)[1] == '.npy']
         for file in files: 
             loaded_np_rep = np.load(file, allow_pickle=True)
             if reshape_to_2828: 
                 new_npz = [] 
                 for i in range(len(loaded_np_rep)):
-                    x = np.reshape(loaded_np_rep[i], (28, 28))
-                    x = np.expand_dims(x, axis=0)
-                    x = np.reshape(loaded_np_rep[i], (28, 28, 1))
+                    x = np.reshape(loaded_np_rep[i], (-1, 28, 28, 1))
                     new_npz.append(x)
                 loaded_np_rep = new_npz 
             data.append(loaded_np_rep)
+        self.data = data
         return data
     
     def interpolate(self,  data : list): 
