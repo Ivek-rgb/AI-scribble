@@ -8,6 +8,14 @@ def main():
 
     train_data = loader.load_data_csv_nums(7000)
     test_data = loader.load_data_csv_nums(1000)
+    #print("prije")
+    #print(test_data[0])
+    test_data = loader.custom_mapper(lambda x : x/50)
+    #print("posli")
+    #print(test_data[0])
+
+
+
     
     #data_prep.visualize_array(train_data[0]["data"])
     

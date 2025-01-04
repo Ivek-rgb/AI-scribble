@@ -11,6 +11,7 @@ class DataLoader:
 
     def __init__(self, path):
         self.path = path
+        self.data = None
 
     def load_data_npy(self, dir : str, reshape_to_2828 : bool = False): 
         data = []
@@ -51,16 +52,22 @@ class DataLoader:
             counter = 0
             for row in reader:
                 if counter >= limit: break 
-                num_data = self.deserialize_numbers_data(row[0])
+                data = self.deserialize_numbers_data(row[0])
                 return_formatted_data.append(
                     {
-                        "label" : [int(i == num_data[0]) for i in range(10)],
-                        "data" : num_data[1]
+                        "label" : [int(i == data[0]) for i in range(10)],
+                        "data" : data[1]
                     }
                 )
                 counter += 1
+        self.data = return_formatted_data
         return return_formatted_data
-        
+    
+    def custom_mapper(self, func):
+        for cell in self.data:
+            cell["data"] = list(map(func, cell["data"]))
+        return self.data
+
     def set_labels(self, data, label): 
         pass 
         # TODO: after formatting training plan for doodles 
