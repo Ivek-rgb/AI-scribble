@@ -8,6 +8,7 @@ from sklearn.model_selection import train_test_split as tts
 
 def main():
     
+
     #network = nn.ToyNeuralNetwork(784, (128,), 10, 0.1, 0)
     neural_model = nm.NeuralModels() 
     #neural_model.mlp_model((784, 128, 64, 10), ["relu", "relu", "softmax"], [0.3])
@@ -16,6 +17,14 @@ def main():
 
     train_data = data_prep.load_data_csv_nums('../data/training-set/number_data/mnist_train.csv', 60000)
     test_data = data_prep.load_data_csv_nums('../data/training-set/number_data/mnist_test.csv', 1000)
+    
+    
+    #print("prije")
+    #print(test_data[0])
+    test_data = loader.custom_mapper(lambda x : x/50)
+       
+    #print("posli")
+    #print(test_data[0])
 
     #data_prep.visualize_array(train_data[0]["data"])
     
