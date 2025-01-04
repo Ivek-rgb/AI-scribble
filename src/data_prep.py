@@ -45,7 +45,7 @@ class DataLoader:
         return [number_label, data]    
 
     #TODO: create interface for data or atleast object to handle it better
-    def load_data_csv_nums(self, limit = math.inf):
+    def load_data_csv_nums(self, limit = math.inf, append = True):
         with open(self.path, newline='', encoding='utf-8') as training_data: 
             reader = csv.reader(training_data, delimiter='\t')
             return_formatted_data = [] 
