@@ -29,7 +29,7 @@ class DataLoader:
                     }
             data.append(loaded_np_rep)
         if (append):
-            self.data = self.data + data
+            self.data = self.data if self.data != None else [] + data
         else: self.data = data
         return self.data
     
@@ -65,7 +65,7 @@ class DataLoader:
                 )
                 counter += 1
         if (append):
-            self.data = self.data + return_formatted_data
+            self.data = self.data if self.data != None else [] + return_formatted_data
         else: self.data = return_formatted_data
         return self.data
 
