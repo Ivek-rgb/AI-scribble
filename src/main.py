@@ -16,11 +16,14 @@ def main():
 
     npy_loader = data_prep.DataLoader('../data/training-set/doodles_data/')
     
-    loaded_data = npy_loader.load_data_npy('../data/training-set/doodles_data/', True) # resizeamo na 28, 28, 1 zbog korištenja konvolucijske mreže  
+    loaded_data = npy_loader.load_data_npy(True) # resizeamo na 28, 28, 1 zbog korištenja konvolucijske mreže  
 
     print(len(loaded_data)) # broj dataseta odnosno kategorija crteža (jabuka, lav), koliko .npy fileova imaš 
     print(len(loaded_data[0])) # broj primjeraka unutar dataseta za jednu kategoriju crteža (jabuka, lav), koliko primjera crteža ima za prvu kategoriju 
+    for i in range(0, len(loaded_data)):
+        print(loaded_data[i]["label"])
     loaded_data = np.array(loaded_data)
+    print(loaded_data)
     
     return # ovo kasnije je za brojeve pa ću samo to omittat preko return-a 
 

@@ -1,8 +1,10 @@
 from keras.src.models import Sequential
 from keras.src.layers import Dense, Dropout, Conv2D, MaxPooling2D, Flatten, BatchNormalization
 from keras.api.saving import load_model
+import tensorflow as tf
 import numpy as np
 import os 
+
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 
 class NeuralModelError(Exception): 
@@ -10,26 +12,28 @@ class NeuralModelError(Exception):
         self.message = message
         super.__init__(self.message)
 
-# TODO: add support for graphics libraries 
 class NeuralModels: 
     
     FILE_EXTENSION = '.keras'
     
-    def __init__(self): 
-        self.model = None
-        self.model_name_tag = None 
+    def __init__(self, model = None, model_name_tag = None): 
+        self.model = model
+        self.model_name_tag = model_name_tag 
     
     @staticmethod
     def equalize_list_lens(equalize: list, equalize_to_len: int, min_dif: int = 0, pattern_getter = lambda list: list[-1]): 
-        
         while len(equalize) < equalize_to_len - min_dif: 
             equalize.append(pattern_getter(equalize))
         
         return equalize 
     
     @staticmethod
-    def custom_seq_model_empty(): 
+    def custom_seq_model_empty() -> Sequential: 
         return Sequential() 
+    
+    @staticmethod
+    def debug_GPU_devices() -> None: 
+        print(tf.config.list_physical_devices('GPU'))
     
     # sets the inner container for model to a desired model 
     def set_model(self, created_model):
@@ -59,6 +63,9 @@ class NeuralModels:
                    activation_functions: list[str], layers_rep: tuple[int], dropout_values : list[int], batch_normalization: bool = False): 
         
         self.model = Sequential()
+        
+        if len(layers_rep) < 1: 
+            raise NeuralModelError("error in number of layers - convolutional model requires atleast one layer for output")
 
         activation_functions = self.equalize_list_lens(activation_functions, len(filter_layers) + len(layers_rep), 1)
         kernel_size_per_layers = self.equalize_list_lens(kernel_size_per_layers, len(filter_layers))
@@ -102,16 +109,17 @@ class NeuralModels:
         return self.model.predict(prediction_data, verbose=verbose)
     
     # TODO: prompt user if the model has not been saved yet / add desc for this functions 
-    def save_model(self, path): 
-        self.model.save(path + self.model_name_tag + self.FILE_EXTENSION)
-        print("Model saved!")
-    
-    def save_as_model(self, path, new_name): 
+    def save_model(self, path, verbose = 0): 
+        path_to_save = path + self.model_name_tag + self.FILE_EXTENSION
+        self.model.save(path_to_save)
+        if verbose: print(f"DEBUG: model saved at - {path_to_save}")
+        
+    def save_as_model(self, path, new_name, verbose = 0): 
         self.model_name_tag = new_name
-        self.save_model(path)
+        self.save_model(path, verbose)
     
-    def load_model(self, path): 
+    def load_model(self, path, verbose = 0): 
         self.model = load_model(path)
         self.model_name_tag = os.path.splitext(os.path.basename(path))[0]
-        print("Model has been loaded!")
+        if verbose : print(f"DEBUG: model loaded - name: {self.model_name_tag}")
     
