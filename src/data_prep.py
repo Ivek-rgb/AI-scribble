@@ -13,7 +13,7 @@ class DataLoader:
         self.path = path
         self.data = None
 
-    def load_data_npy(self, reshape_to_2828 : bool = False): 
+    def load_data_npy(self, dir : str, reshape_to_2828 : bool = False, append = True): 
         data = []
         files = [file for file in os.listdir(self.path) if os.path.isfile(os.path.join(self.path, file)) and os.path.splitext(file)[1] == '.npy']
         for file in files:
@@ -28,8 +28,10 @@ class DataLoader:
                         "data" : new_npz
                     }
             data.append(loaded_np_rep)
-        self.data = data
-        return data
+        if (append):
+            self.data = self.data + data
+        else: self.data = data
+        return self.data
     
     def interpolate(self,  data : list): 
         return np.interp(data, [-1, 1], [0, 255])
@@ -62,8 +64,10 @@ class DataLoader:
                     }
                 )
                 counter += 1
-        self.data = return_formatted_data
-        return return_formatted_data
+        if (append):
+            self.data = self.data + return_formatted_data
+        else: self.data = return_formatted_data
+        return self.data
 
     def custom_mapper(self, func):
         for cell in self.data:
