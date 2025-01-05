@@ -13,17 +13,20 @@ class DataLoader:
         self.path = path
         self.data = None
 
-    def load_data_npy(self, dir : str, reshape_to_2828 : bool = False): 
+    def load_data_npy(self, reshape_to_2828 : bool = False): 
         data = []
-        files = [os.path.join(dir, file) for file in os.listdir(dir) if os.path.isfile(os.path.join(dir, file)) and os.path.splitext(file)[1] == '.npy']
-        for file in files: 
-            loaded_np_rep = np.load(file, allow_pickle=True)
+        files = [file for file in os.listdir(self.path) if os.path.isfile(os.path.join(self.path, file)) and os.path.splitext(file)[1] == '.npy']
+        for file in files:
+            loaded_np_rep = np.load(os.path.join(self.path, file), allow_pickle=True)
             if reshape_to_2828: 
                 new_npz = [] 
                 for i in range(len(loaded_np_rep)):
                     x = np.reshape(loaded_np_rep[i], (28, 28, 1))
                     new_npz.append(x)
-                loaded_np_rep = new_npz 
+                loaded_np_rep = {
+                        "label" : file.split('_')[-1].split('.')[0],
+                        "data" : new_npz
+                    }
             data.append(loaded_np_rep)
         self.data = data
         return data
