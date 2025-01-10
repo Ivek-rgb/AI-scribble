@@ -4,8 +4,6 @@ import numpy as np
 # SGD and Batch training plans to choose
 # Ability to change learning rate along with decay algorithm
 
-# TODO: multi hidden layer neural network capabilities  
-
 class ToyNeuralNetwork: 
     
     class __ActivationFunction: 
@@ -32,7 +30,6 @@ class ToyNeuralNetwork:
             self.update_functions()
             self.outer_instance.activation = "relu"
         
-        # TODO: finda a way to implement softmax implements               
         def softmax(self): 
             self.outer_instance.activation = "softmax"   
         

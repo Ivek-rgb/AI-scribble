@@ -1,6 +1,7 @@
 from keras.src.models import Sequential
 from keras.src.layers import Dense, Dropout, Conv2D, MaxPooling2D, Flatten, BatchNormalization
 from keras.api.saving import load_model
+from keras._tf_keras.keras.preprocessing.image import ImageDataGenerator
 import tensorflow as tf
 import numpy as np
 import os 
@@ -17,8 +18,12 @@ class NeuralModels:
     FILE_EXTENSION = '.keras'
     
     def __init__(self, model = None, model_name_tag = None): 
+        
         self.model = model
         self.model_name_tag = model_name_tag 
+        self.image_data_augmentator = None
+        
+        self.set_augmentation_datagen()
     
     @staticmethod
     def equalize_list_lens(equalize: list, equalize_to_len: int, min_dif: int = 0, pattern_getter = lambda list: list[-1]): 
@@ -45,7 +50,7 @@ class NeuralModels:
         self.model = Sequential()
         
         if len(layers_rep) < 3: 
-            raise NeuralModelError("error in number of layers - sequential model requires input, atleast 1 hidden and an ouput layer")
+            raise NeuralModelError("error in number of layers - fully connected model requires 1 input, atleast 1 hidden and 1 ouput layer")
 
         activation_function = self.equalize_list_lens(activation_function, len(layers_rep), 1)
         dropout_values = self.equalize_list_lens(dropout_values, len(layers_rep), 1)
@@ -99,10 +104,21 @@ class NeuralModels:
             loss= loss_type,
             metrics=[*metrics]
         )
-        
+    
+    def set_augmentation_datagen(self, rotation_level_deg = 0, width_shift = 0, height_shift = 0, shear_range = 0, zoom_range = 0, fill_mode = "nearest"): 
+        self.image_data_augmentator = ImageDataGenerator(
+            rotation_range = rotation_level_deg,
+            width_shift_range=  width_shift,
+            height_shift_range = height_shift,
+            shear_range = shear_range,
+            zoom_range = zoom_range,
+            fill_mode= fill_mode
+        )
+    
     # train model on given batch of data and labels for correction 
     def fit(self, training_data: np.ndarray, training_labels: np.ndarray, batch_size: int = 64, epochs: int = 10, verbose: int = 0): 
-        self.model.fit(training_data, training_labels, batch_size=batch_size, epochs=epochs, verbose=verbose)
+        data_iterator = self.image_data_augmentator.flow(training_data, training_labels, batch_size = batch_size) 
+        self.model.fit(data_iterator, epochs=epochs, verbose=verbose)
     
     # return model's prediciton based on it's configuration   
     def predict(self, prediction_data : np.ndarray, verbose = 0) -> np.ndarray: 
@@ -122,4 +138,3 @@ class NeuralModels:
         self.model = load_model(path)
         self.model_name_tag = os.path.splitext(os.path.basename(path))[0]
         if verbose : print(f"DEBUG: model loaded - name: {self.model_name_tag}")
-    
