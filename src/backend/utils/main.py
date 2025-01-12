@@ -1,23 +1,38 @@
-import data_prep
-from neural_networks import neural_net as nn, neural_models as nm
+from data_prep import DataLoader
+#from neural_networks import neural_net as nn, neural_models as nm
 from functools import reduce
 import numpy as np
-import tensorflow as tf
-from sklearn.model_selection import train_test_split as tts
 
 
 def main():
     
-    #network = nn.ToyNeuralNetwork(784, (128,), 10, 0.1, 0)
+    new_data_loader = DataLoader('../../../data/training-set/doodles_data/')
+    
+    new_data_loader.load_data_npy_dir("short_doodles_categories", 2, 10, True, False) 
+    
+    data, labels = new_data_loader.return_split_labels_data()  
+    
+    print(labels.tolist())
+    
+    return 
     neural_model = nm.NeuralModels() 
+
+    pngs_loader = DataLoader('../../../data/training-set/doodles_data/')  
+    pngs_loader.load_data_npy("categories", True, True) # loads images 
+    
+    [print(data["label"]) for data in pngs_loader.data] #unmixed pure batch data 
+    
+    return 
     #neural_model.mlp_model((784, 128, 64, 10), ["relu", "relu", "softmax"], [0.3])
-    neural_model.conv2D_model((28, 28, 1), (32, 64), [(2,2)], (2,2), ["relu", "relu", "relu", "softmax"], (512, 10), [0.25, 0.5]) 
+
+    neural_model.conv2D_model((28, 28, 1), (16, 32, 64), [(6,6), (5,5)], (2,2), ["relu", "relu", "relu", "softmax"], (512, 10), [0.25, 0.5]) 
     neural_model.set_augmentation_datagen(5, 0, 0, 0, [0.5, 1]) # augmentator only rotates images slightly and zooms in on some 
     neural_model.model_compile()
 
     loader_train = data_prep.DataLoader('../../../data/training-set/number_data/mnist_train.csv') 
-    loader_test = data_prep.DataLoader('../../../data/training-set/number_data/mnist_test.csv') 
     
+    
+    return     
     loader_train.load_data_csv_nums()
     loader_test.load_data_csv_nums()
     #test_data = loader.load_data_csv_nums('../data/training-set/number_data/mnist_test.csv', 1000)
