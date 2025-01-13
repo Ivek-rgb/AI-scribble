@@ -6,13 +6,13 @@ import numpy as np
 
 def main():
     
-    new_data_loader = DataLoader('../../../data/training-set/doodles_data/')
+    new_data_loader = DataLoader('../../../data/training-set/number_data/mnist_train.csv')
     
-    new_data_loader.load_data_npy_dir("short_doodles_categories", 2, 10, True, False) 
+    new_data_loader.load_data_csv_nums('new_number_data', 20, True)
     
     data, labels = new_data_loader.return_split_labels_data()  
     
-    print(labels.tolist())
+    DataLoader.visualize_array(data[7])
     
     return 
     neural_model = nm.NeuralModels() 
