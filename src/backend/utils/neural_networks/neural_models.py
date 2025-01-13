@@ -2,7 +2,7 @@ from keras.src.models import Sequential
 from keras.src.layers import Dense, Dropout, Conv2D, MaxPooling2D, Flatten, BatchNormalization
 from keras.api.saving import load_model
 from keras._tf_keras.keras.preprocessing.image import ImageDataGenerator
-from data_prep import DataLoader 
+from utils.data_prep import DataLoader 
 import tensorflow as tf
 import numpy as np
 import os 

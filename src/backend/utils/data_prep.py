@@ -22,11 +22,13 @@ class DataLoader:
         self.elements = None
         
     def set_new_path(self, new_path): 
-        if self.path != None: self.past_paths.append(self.path) 
+        if self.path != None: self.past_paths.append(self.path)
         self.path = new_path
     
     # return data in fit worthy mode (train_x, train_y)
     def return_split_labels_data(self) -> tuple[np.ndarray, np.ndarray]: 
+        for row in self.elements: 
+            print(row["data"])        
         data, labels = zip(*[(row["data"], row["label"]) for row in self.elements])
         return np.array(data), np.array(labels)
     
@@ -48,8 +50,9 @@ class DataLoader:
     @staticmethod
     def load_npy_array_from_file(file_path: str, limit_to_data : int = math.inf, reshape_dims: tuple[int, int, int] | None = None, allow_pickle = True) -> np.ndarray[np.ndarray]: 
         loaded_np_rep = np.load(file_path, allow_pickle=allow_pickle)
-        if reshape_dims: 
-            loaded_np_rep = np.array([DataLoader.handle_reshaping_array(array, reshape_dims) for index, array in zip(DataLoader.determine_limit_range(limit_to_data, loaded_np_rep), loaded_np_rep)]) 
+        loaded_np_rep = loaded_np_rep[:min(limit_to_data, len(loaded_np_rep))]        
+        if reshape_dims != None: 
+            loaded_np_rep = [DataLoader.handle_reshaping_array(array, reshape_dims) for array in loaded_np_rep] 
         return loaded_np_rep
     
     @staticmethod
@@ -87,8 +90,7 @@ class DataLoader:
 
     @staticmethod
     def convert_arr_to_img(array): 
-        new_arr = np.reshape(array, (28, 28))
-        return Image.fromarray(new_arr)
+        return Image.fromarray(np.reshape(array, (28, 28)))
 
     @staticmethod
     def visualize_array(array): 
@@ -107,17 +109,18 @@ class DataLoader:
         data = []
         files = self.get_files_from_dir(self.path, limit_files) 
         for file in files:
-            loaded_np_rep = DataLoader.load_npy_array_from_file(os.path.join(self.path, file), limit_data, (28,28,1) if reshape_to_2828 else None)
-            loaded_np_rep = {
-                "label" : file.split('_')[-1].split('.')[0],
-                "data" : loaded_np_rep
-            }
-            data.append(loaded_np_rep)
-            self.categories[str(loaded_np_rep["label"])] = 0 
+            loaded_np_rep = DataLoader.load_npy_array_from_file(os.path.join(self.path, file), limit_data, (28,28) if reshape_to_2828 else None)
+            label_str = file.split('_')[-1].split('.')[0]
+            for inner_matrix in loaded_np_rep: 
+                data.append({
+                    "label":label_str,
+                    "data":inner_matrix
+                })
+            self.categories[str(label_str)] = 0 
         if (append):
             self.elements = self.elements if self.elements != None else [] + data
         else: self.elements = data
-        with open(self.CATEGORIES_STORAGE_PATH + self.category_file_name(categories_save_filename) + ".txt", 'w+') as categories_file: 
+        with open(self.CATEGORIES_STORAGE_PATH + self.determine_category_file_name(categories_save_filename) + ".txt", 'w+') as categories_file: 
             categories_file.write("\n".join(self.categories.keys()))
         return self.elements
 
@@ -132,7 +135,7 @@ class DataLoader:
                 if counter >= limit: break 
                 label_data = self.deserialize_numbers_data(row[0])
                 if reshape_to_2828: 
-                    label_data[1] = DataLoader.handle_reshaping_array(label_data[1], (28, 28, 1))
+                    label_data[1] = DataLoader.handle_reshaping_array(label_data[1], (28, 28))
                 categories[str(int(label_data[0]))] = 0
                 return_formatted_data.append(
                     {
@@ -144,7 +147,7 @@ class DataLoader:
         if (append):
             self.elements = self.elements if self.elements != None else [] + return_formatted_data
         else: self.elements = return_formatted_data
-        with open(self.CATEGORIES_STORAGE_PATH + self.category_file_name(categories_save_filename) + ".txt", 'w+') as categories_file: 
+        with open(self.CATEGORIES_STORAGE_PATH + self.determine_category_file_name(categories_save_filename) + ".txt", 'w+') as categories_file: 
             categories_file.write("\n".join(categories.keys()))
         return self.elements
     
