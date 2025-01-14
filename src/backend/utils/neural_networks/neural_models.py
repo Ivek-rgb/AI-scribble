@@ -1,8 +1,8 @@
 from keras.src.models import Sequential
 from keras.src.layers import Dense, Dropout, Conv2D, MaxPooling2D, Flatten, BatchNormalization
-from keras.api.saving import load_model
+from keras.api.saving import load_model, save_model
 from keras._tf_keras.keras.preprocessing.image import ImageDataGenerator
-from utils.data_prep import DataLoader 
+from .data_prep import DataLoader 
 import tensorflow as tf
 import numpy as np
 import os 
@@ -19,12 +19,10 @@ class NeuralModels:
     FILE_EXTENSION = '.keras'
     
     def __init__(self, model = None, model_name_tag = None): 
-        
         self.model = model
         self.model_name_tag = model_name_tag 
         self.image_data_augmentator = None
 
-        self.data_loader = DataLoader(None) 
         self.set_augmentation_datagen()
     
     @staticmethod
@@ -111,19 +109,18 @@ class NeuralModels:
             metrics=[*metrics]
         )
     
-    def set_augmentation_datagen(self, rotation_level_deg = 0, width_shift = 0, height_shift = 0, shear_range = 0, zoom_range = 0, fill_mode = "nearest"): 
+    def set_augmentation_datagen(self, rotation_level_deg = 0, width_shift = 0, height_shift = 0, shear_range = 0, zoom_range = 0, fill_mode = "nearest", zca_whitening = False): 
         self.image_data_augmentator = ImageDataGenerator(
             rotation_range = rotation_level_deg,
             width_shift_range=  width_shift,
             height_shift_range = height_shift,
             shear_range = shear_range,
             zoom_range = zoom_range,
-            fill_mode= fill_mode
+            fill_mode= fill_mode,
+            zca_whitening=zca_whitening
         )
         
-    def fit(self, training_data=None, training_labels=None, batch_size=64, epochs=10, verbose=0):
-        if training_data is None or training_labels is None:
-            training_data, training_labels = self.data_loader.return_split_labels_data()
+    def fit(self, training_data, training_labels, batch_size=64, epochs=10, verbose=0):
         data_iterator = self.image_data_augmentator.flow(training_data, training_labels, batch_size=batch_size)
         self.model.fit(data_iterator, epochs=epochs, verbose=verbose)
 
@@ -135,13 +132,15 @@ class NeuralModels:
     # return model's prediciton based on it's configuration   
     def predict(self, prediction_data : np.ndarray, verbose = 0) -> np.ndarray: 
         return self.model.predict(prediction_data, verbose=verbose)
-    
+        
     def change_model_name(self, new_name): 
         self.model_name_tag = new_name
-        self.data_loader.outer_category_name = new_name   
+        
+    def evaluate_model(self, test_x, test_y, verbose = 0):
+        return self.model.evaluate(test_x, test_y, verbose)
     
     # TODO: prompt user if the model has not been saved yet / add desc for this functions 
-    def save_model(self, path, verbose = 0): 
+    def save_model(self, path = os.path.join(os.path.dirname(__file__), '../../models/'), verbose = 0): 
         
         if self.model is None:
             raise NeuralModelError("No model is defined. Cannot save.")
@@ -149,7 +148,8 @@ class NeuralModels:
             raise NeuralModelError("Model name tag is not set. Specify a name for the model.")
         
         path_to_save = path + self.model_name_tag + self.FILE_EXTENSION
-        self.model.save(path_to_save)
+        self.model.save(path_to_save, save_format='keras_v3')
+        
         if verbose: print(f"DEBUG: model saved at - {path_to_save}")
         
     def save_as_model(self, path, new_name, verbose = 0): 
@@ -163,6 +163,7 @@ class NeuralModels:
         self.save_model(path, verbose)
     
     def load_model(self, path, verbose = 0): 
-        self.model = load_model(path)
         self.model_name_tag = os.path.splitext(os.path.basename(path))[0]
+        print(self.model_name_tag)
+        self.model = load_model(path)
         if verbose : print(f"DEBUG: model loaded - name: {self.model_name_tag}")

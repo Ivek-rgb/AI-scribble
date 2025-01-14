@@ -12,24 +12,24 @@ from collections.abc import Sized
 
 class DataLoader:
     
-    CATEGORIES_STORAGE_PATH = "../data/" # default path for storing model categories 
+    CATEGORIES_STORAGE_PATH = os.path.join(os.path.dirname(__file__), '../../data/') 
 
     def __init__(self, path):
         self.path = path
         self.past_paths = []
         self.categories = {}
-        self.outer_category_name = None        
         self.elements = None
         
     def set_new_path(self, new_path): 
         if self.path != None: self.past_paths.append(self.path)
         self.path = new_path
     
-    # return data in fit worthy mode (train_x, train_y)
-    def return_split_labels_data(self) -> tuple[np.ndarray, np.ndarray]: 
-        for row in self.elements: 
-            print(row["data"])        
-        data, labels = zip(*[(row["data"], row["label"]) for row in self.elements])
+    def return_split_labels_data(self, transform_categories = False) -> tuple[np.ndarray, np.ndarray]:
+        data, labels = (None, None)
+        if not transform_categories:  
+            data, labels = zip(*[(row["data"], row["label"]) for row in self.elements])
+        else: 
+            data, labels = zip(*[(row["data"], [int(self.categories[row["label"]] == idx) for idx in range(len(self.categories))]) for row in self.elements])
         return np.array(data), np.array(labels)
     
     @staticmethod
@@ -65,9 +65,9 @@ class DataLoader:
         return base64.b64decode(image_encoded)
     
     @staticmethod
-    def load_resize_image(image_decoded, resize_dims : tuple[int] = (28, 28)) -> np.ndarray: 
+    def load_resize_image(image_decoded, resize_dims : tuple[int] = (28, 28), invert_colors = True) -> np.ndarray: 
         image_data = Image.open(BytesIO(image_decoded)).convert('L')
-        image_data = ImageOps.invert(image_data)        
+        if invert_colors: image_data = ImageOps.invert(image_data)        
         enhancer = ImageEnhance.Brightness(image_data)
         image_data = enhancer.enhance(50)
         if resize_dims != None: 
@@ -102,44 +102,45 @@ class DataLoader:
         number_label, *data = map( lambda x : float(x), row.split(','))
         return [number_label, data]
     
-    def determine_category_file_name(self, name): 
-        return self.outer_category_name if self.outer_category_name else name
-
-    def load_data_npy_dir(self, categories_save_filename: str, limit_files: int = math.inf, limit_data: int = math.inf, reshape_to_2828 : bool = False, append = True) -> list: 
+    def load_data_npy_dir(self, categories_save_filename: str | None, limit_files: int = math.inf, limit_data: int = math.inf, reshape_to_2828 : bool = False, append = True) -> list: 
         data = []
-        files = self.get_files_from_dir(self.path, limit_files) 
+        files = self.get_files_from_dir(self.path, limit_files)
         for file in files:
-            loaded_np_rep = DataLoader.load_npy_array_from_file(os.path.join(self.path, file), limit_data, (28,28) if reshape_to_2828 else None)
+            loaded_np_rep = DataLoader.load_npy_array_from_file(os.path.join(self.path, file), limit_data, (28,28,1) if reshape_to_2828 else None)
             label_str = file.split('_')[-1].split('.')[0]
             for inner_matrix in loaded_np_rep: 
                 data.append({
                     "label":label_str,
                     "data":inner_matrix
                 })
-            self.categories[str(label_str)] = 0 
+            self.categories[str(label_str)] = 0
         if (append):
             self.elements = self.elements if self.elements != None else [] + data
         else: self.elements = data
-        with open(self.CATEGORIES_STORAGE_PATH + self.determine_category_file_name(categories_save_filename) + ".txt", 'w+') as categories_file: 
-            categories_file.write("\n".join(self.categories.keys()))
+        if categories_save_filename: 
+            path = self.CATEGORIES_STORAGE_PATH + categories_save_filename + ".txt"
+            with open(path, 'w+') as categories_file: 
+                categories_file.write("\n".join(self.categories.keys()))
+            self.load_categories(path) # refresh categories
         return self.elements
 
 
-    def load_data_csv_nums(self, categories_save_filename: str, limit = math.inf, reshape_to_2828: bool = False,  append = True):
+    def load_data_csv_nums(self, categories_save_filename: str | None, limit = math.inf, reshape_to_2828: bool = False,  append = True, custom_deserialization_func = deserialize_numbers_data, custom_hasing_func = lambda x: str(int(x))):
         with open(self.path, newline='', encoding='utf-8') as training_data: 
             reader = csv.reader(training_data, delimiter='\t')
             return_formatted_data = [] 
             categories = {}
             counter = 0
+            category_count = 0            
             for row in reader:
                 if counter >= limit: break 
-                label_data = self.deserialize_numbers_data(row[0])
+                label_data = custom_deserialization_func(row[0])
                 if reshape_to_2828: 
-                    label_data[1] = DataLoader.handle_reshaping_array(label_data[1], (28, 28))
-                categories[str(int(label_data[0]))] = 0
+                    label_data[1] = DataLoader.handle_reshaping_array(label_data[1], (28, 28, 1))
+                categories[custom_hasing_func(label_data[0])] = category_count
                 return_formatted_data.append(
                     {
-                        "label" : int(label_data[0]),
+                        "label" : custom_hasing_func(label_data[0]),
                         "data" : label_data[1]
                     }
                 )
@@ -147,8 +148,11 @@ class DataLoader:
         if (append):
             self.elements = self.elements if self.elements != None else [] + return_formatted_data
         else: self.elements = return_formatted_data
-        with open(self.CATEGORIES_STORAGE_PATH + self.determine_category_file_name(categories_save_filename) + ".txt", 'w+') as categories_file: 
-            categories_file.write("\n".join(categories.keys()))
+        if categories_save_filename: 
+            path = self.CATEGORIES_STORAGE_PATH + categories_save_filename + ".txt"
+            with open(path, 'w+') as categories_file: 
+                categories_file.write("\n".join(categories.keys()))
+            self.load_categories(path) # refresh categories
         return self.elements
     
     def create_custom_element_generator(self, data_generate_function, label_generate_function, num_of_data : int, append: bool = True) -> list[np.ndarray]:
@@ -163,6 +167,25 @@ class DataLoader:
         else: self.elements = generated_elements 
 
         return self.elements
+    
+    def load_categories(self, category_file_path, key_is_category_name = True) -> map: 
+        ret_categories = DataLoader.load_categories_static(category_file_path, key_is_category_name)
+        self.categories = ret_categories
+        return ret_categories 
+        
+    @staticmethod
+    def load_categories_static(category_file_path, key_is_category_name = True) -> map:
+        ret_categories = {}
+        with open(category_file_path, "r") as category_file: 
+            categories = category_file.read().splitlines() 
+            if key_is_category_name: 
+                for idx, category in enumerate(categories): 
+                    ret_categories[category] = idx
+            else: 
+                for idx, category in enumerate(categories): 
+                    ret_categories[idx] = category
+            return ret_categories
+        
     
     def map_elements(self, data_mapper = lambda x : x, label_mapper = lambda x : x) -> list[np.ndarray]:
         for element in self.elements: 
@@ -188,10 +211,10 @@ class DataLoader:
         return self.elements
 
     def filter_data(self, data_filter=lambda x: True) -> list[dict]:
-        return self.element_filter(data_filter=data_filter)
+        return self.filter_elements(data_filter=data_filter)
 
     def filter_labels(self, label_filter=lambda x: True) -> list[dict]:
-        return self.element_filter(label_filter=label_filter)
+        return self.filter_elements(label_filter=label_filter)
 
     def return_categories(self): 
         return self.categories.keys()

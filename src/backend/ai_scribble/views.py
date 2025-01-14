@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from utils.data_prep import DataLoader
+from utils.neural_networks.data_prep import DataLoader
 from .nm_manager import ModelManager
 from django.http import JsonResponse
 import json
@@ -17,6 +17,8 @@ def process_request(request) -> Response:
         
         data_sent = json.loads(request.body.decode('utf-8'))
         
+
+        
         image_data = data_sent.get('image')
         np_array = DataLoader.b64_img_to_nparr(image_data)
         np_array = DataLoader.numpy_array_mapper(np_array, lambda x: x / 255)
@@ -25,7 +27,7 @@ def process_request(request) -> Response:
         
         print(output)
         
-        return Response({"prediction" : f"{output.index(max(output))}"  })
+        return Response({"prediction" : f"{ModelManager._categories_map[output.index(max(output))]}"  })
     
 
 # TODO: implement function that reads trained categories and return's ones that 
