@@ -7,6 +7,8 @@ class AiScribbleConfig(AppConfig):
     name = 'ai_scribble'
     
     def ready(self):
-        ModelManager.get_model("conv2D_number_model_1.keras") # test model convolutional for numbers with 80% + accuracy
+        ModelManager.get_model('conv2d_emnist_letters_augmented_1')
+        ModelManager.load_categories()
         print(ModelManager.get_model().model_name_tag)
+        print("App loading ready")
         return super().ready()

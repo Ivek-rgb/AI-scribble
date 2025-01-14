@@ -1,5 +1,6 @@
 from threading import Lock
 from utils.neural_networks.neural_models import NeuralModels
+from utils.neural_networks.data_prep import DataLoader
 import os 
 
 class ModelManager:
@@ -7,26 +8,38 @@ class ModelManager:
     _neural_model : NeuralModels = NeuralModels()
     _current_model_name = None  
     _lock = Lock()
+    _categories_map = {}
     
     MODEL_PATH = '../models/'    
+    CATEGORIES_PATH = '../data/'
 
     @classmethod 
-    def generate_path(cls, model_name): 
-        return os.path.join(os.path.dirname(__file__), f'{cls.MODEL_PATH}{model_name}')
+    def generate_path_model(cls, model_name): 
+        return os.path.join(os.path.dirname(__file__), f'{cls.MODEL_PATH}{model_name}.keras')
+    
+    @classmethod 
+    def generate_path_categories(cls, category_file_name): 
+        return os.path.join(os.path.dirname(__file__), f'{cls.CATEGORIES_PATH}{category_file_name}.txt')
     
     @classmethod
     def get_model(cls, model_name = None): 
         with cls._lock: 
             if model_name == None: return cls._neural_model
             if cls._neural_model.model_name_tag != model_name: 
-                cls._neural_model.load_model(cls.generate_path(model_name)) 
+                cls._neural_model.load_model(cls.generate_path_model(model_name)) 
                 cls._current_model_name = cls._neural_model.model_name_tag
             return cls._neural_model
         
+    @classmethod
+    def load_categories(cls, categories_file_name = None): 
+        with cls._lock: 
+            path = cls.generate_path_categories(categories_file_name if categories_file_name else cls._neural_model.model_name_tag)
+            cls._categories_map = DataLoader.load_categories_static(path, False) 
+             
     @classmethod 
     def save_model(cls): 
         with cls._lock: 
-            cls._neural_model.save_model(cls.generate_path(''))
+            cls._neural_model.save_model(cls.generate_path_model(cls._neural_model.model_name_tag))
             
     @classmethod 
     def predict(cls, prediction_data): 
