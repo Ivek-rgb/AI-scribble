@@ -7,17 +7,20 @@
     /** @typedef {Object} Props
      * @prop {HTMLCanvasElement} [stateCanvas]
      * @prop {HTMLCanvasElement} [targetCanvas]
-     * @prop {HTMLImageElement} resizedImage
+     * @prop {HTMLImageElement} [resizedImage]
+     * @prop {HTMLImageElement} [stateImage]
      * @prop {Number} [scale]
      * @prop {Number} [outputWidth]
      * @prop {()=>void} [onDraw]
+     * @prop {()=>void} [onWipe]
      */
 
     /** @type {Props}*/
     let {
         stateCanvas = $bindable(document.createElement("canvas")),
         targetCanvas = $bindable(document.createElement("canvas")),
-        resizedImage = $bindable(),
+        resizedImage = $bindable(document.createElement("img")),
+        stateImage = $bindable(document.createElement("img")),
         outputWidth = 28,
         scale = 10,
         onDraw = () => {},
@@ -47,12 +50,12 @@
      */
     let stateContext;
 
-    let originalImage = new Image();
-
     let previousMousePos = { x: 0, y: 0 };
     let drawing = false;
 
     /**
+     * Maps click on user facing canvas to
+     * corresponding coords on state canvas
      *   @param {HTMLCanvasElement} refCanvas
      *   @param {MouseEvent} mouseEvent
      */
@@ -79,10 +82,8 @@
     };
     const drawEnd = (/** @type {MouseEvent} */ e) => {
         draw(e);
+        setTimeout(updateTargetCanvas, 5);
         drawing = false;
-        setTimeout(() => {
-            updateTargetCanvas();
-        }, 5);
     };
 
     /** @param {MouseEvent} event */
@@ -93,9 +94,8 @@
 
         let currentMousePos = getMousePosition(targetCanvas, event);
         stateContext.beginPath();
-        stateContext.lineWidth = Math.ceil(
-            stateCanvas.width / resizeCanvas.width,
-        );
+        stateContext.lineWidth =
+            Math.ceil(stateCanvas.width / resizeCanvas.width) * 1.5;
         stateContext.strokeStyle = "white";
         stateContext.lineCap = "round";
 
@@ -109,18 +109,28 @@
         onDraw();
     }
 
+    /**
+     * Iz nekog razloga, update na targetCanvas zna kasnit.
+     * Ako se na njega naslika nova slika, browser tu sliku
+     * nacrta na canvas kad mu se sprdne. Uglavnom instantno,
+     * ali zna kasnit koju sekundu. Nisam siguran zasto.
+     */
     function updateTargetCanvas() {
-        originalImage.src = stateCanvas.toDataURL();
+        stateImage.src = stateCanvas.toDataURL();
+
+        // Clear user facing canvas
         targetContext.clearRect(0, 0, targetCanvas.width, targetCanvas.height);
 
         let resizeContext = resizeCanvas.getContext("2d");
         if (!resizeContext) return;
 
-        resizeContext.clearRect(0, 0, resizeCanvas.width, resizeCanvas.height);
-        resizeContext.drawImage(originalImage, 0, 0, 28, 28);
+        // Update resized image
+        resizeContext.fillRect(0, 0, resizeCanvas.width, resizeCanvas.height);
+        resizeContext.drawImage(stateImage, 0, 0, 28, 28);
         resizedImage.src = resizeCanvas.toDataURL();
 
         if (preview) {
+            // Draw scaled down image on user facing canvas
             targetContext.imageSmoothingEnabled = false;
 
             targetContext.drawImage(
@@ -131,21 +141,23 @@
                 targetCanvas.height,
             );
         } else {
+            // Draw full res image on user facing canvas
             targetContext.imageSmoothingEnabled = true;
             targetContext.drawImage(
-                originalImage,
+                stateImage,
                 0,
                 0,
                 targetCanvas.width,
                 targetCanvas.height,
             );
         }
+        targetContext.stroke();
     }
 
     function wipe() {
-        stateContext.clearRect(0, 0, stateCanvas.width, stateCanvas.height);
-        updateTargetCanvas();
+        stateContext.fillRect(0, 0, stateCanvas.width, stateCanvas.height);
         onWipe();
+        updateTargetCanvas();
     }
 
     // Assign canvas context variables used through component
@@ -160,6 +172,8 @@
             (() => {
                 throw Error("Unable to get context");
             })();
+        stateContext.fillRect(0, 0, stateCanvas.width, stateCanvas.height);
+        updateTargetCanvas();
     });
 
     // Handle window resize
