@@ -24,7 +24,7 @@ class NeuralModels:
         self.model_name_tag = model_name_tag 
         self.image_data_augmentator = None
 
-        self.data_loader = DataLoader() 
+        self.data_loader = DataLoader(None) 
         self.set_augmentation_datagen()
     
     @staticmethod

@@ -15,9 +15,24 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, re_path
+from django.conf import settings
+from django.conf.urls.static import static
+from django.shortcuts import HttpResponse, render
+
+
+# Trebam poslat svelte aplikaciju kao renderan HTML
+# template jer ne mogu drugacije poslat i CSRF
+# token koji django koristi za nekakav auth
+def serve_svelte_app(request) -> HttpResponse:
+    return render(request, "index.html")
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/', include('ai_scribble.urls'))
-]
+    path('api/', include('ai_scribble.urls')),
+    re_path(r'^$', serve_svelte_app)
+] + static(
+    settings.MEDIA_URL,
+    document_root=settings.MEDIA_ROOT
+)
