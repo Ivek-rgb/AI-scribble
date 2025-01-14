@@ -96,8 +96,6 @@
         stateContext.beginPath();
         stateContext.lineWidth =
             Math.ceil(stateCanvas.width / resizeCanvas.width) * 1.5;
-        stateContext.strokeStyle = "white";
-        stateContext.lineCap = "round";
 
         stateContext.moveTo(previousMousePos.x, previousMousePos.y);
         stateContext.lineTo(currentMousePos.x, currentMousePos.y);
@@ -172,6 +170,14 @@
             (() => {
                 throw Error("Unable to get context");
             })();
+
+        // Pozadinska boja
+        stateContext.fillStyle = "white";
+
+        // Boja broja
+        stateContext.strokeStyle = "black";
+        stateContext.lineCap = "round";
+
         stateContext.fillRect(0, 0, stateCanvas.width, stateCanvas.height);
         updateTargetCanvas();
     });
