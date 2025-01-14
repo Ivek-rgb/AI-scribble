@@ -5,9 +5,10 @@
     /**
      * @type {string | null}
      */
-    let prediction = null;
+    let prediction = $state(null);
 
-    let image = new Image();
+    let imageToSend = $state(new Image());
+    let imageSrc = $state("");
 
     function decrementCounter() {
         if (counter > -1) {
@@ -18,14 +19,18 @@
             fetch("/api/", {
                 method: "post",
                 body: JSON.stringify({
-                    image: image.src.replace("data:image/png;base64,", ""),
+                    image: imageToSend.src.replace(
+                        "data:image/png;base64,",
+                        "",
+                    ),
+                    compressed: false,
                 }),
             })
                 .then((res) => res.json())
                 .then((json) => (prediction = json.prediction));
         }
 
-        setTimeout(decrementCounter, 10);
+        setTimeout(decrementCounter, 100);
     }
 
     decrementCounter();
@@ -37,9 +42,10 @@
             {@html prediction ?? "&nbsp;"}
         </div>
         <ImageEditor
-            resizedImage={image}
+            stateImage={imageToSend}
             onDraw={() => {
-                counter = 20;
+                counter = 2;
+                imageSrc = imageToSend.src;
             }}
             onWipe={() => {
                 counter = -1;
@@ -47,4 +53,9 @@
             }}
         />
     </div>
+
+    Slika koja se šalje:
+    <a href={imageSrc} target="_blank">
+        <img bind:this={imageToSend} alt="" />
+    </a>
 </main>
