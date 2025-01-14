@@ -27,8 +27,6 @@
         onWipe = () => {},
     } = $props();
 
-    let canvasSize = $state({ width: 500, height: 500 });
-
     let resizeCanvas = document.createElement("canvas");
     resizeCanvas.width = outputWidth;
     resizeCanvas.height = resizeCanvas.width;
@@ -209,8 +207,8 @@
         ></div>
         <canvas
             bind:this={targetCanvas}
-            width={canvasSize.width}
-            height={canvasSize.height}
+            width={targetCanvas.width}
+            height={targetCanvas.height}
             onmousedown={drawStart}
             onmouseup={drawEnd}
             onmouseleave={drawEnd}
