@@ -4,10 +4,8 @@ data/training-set/number_data/*
 .env
 .env/
 .env/*
+__pycache__/
+*.pyc
 
 src/backend/models/*
-
-
-frontend/
-
 !.gitkeep
