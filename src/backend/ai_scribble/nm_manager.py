@@ -7,19 +7,25 @@ class ModelManager:
     
     _neural_model : NeuralModels = NeuralModels()
     _current_model_name = None  
+    _model_list : list[str] = []
     _lock = Lock()
     _categories_map = {}
     
-    MODEL_PATH = '../models/'    
-    CATEGORIES_PATH = '../data/'
+    MODEL_PATH = os.path.join(os.path.dirname(__file__), '../models/')    
+    CATEGORIES_PATH = os.path.join(os.path.dirname(__file__), '../data/')
 
     @classmethod 
     def generate_path_model(cls, model_name): 
-        return os.path.join(os.path.dirname(__file__), f'{cls.MODEL_PATH}{model_name}.keras')
+        return os.path.join(cls.MODEL_PATH,f'{model_name}.keras')
     
     @classmethod 
     def generate_path_categories(cls, category_file_name): 
-        return os.path.join(os.path.dirname(__file__), f'{cls.CATEGORIES_PATH}{category_file_name}.txt')
+        return os.path.join(cls.CATEGORIES_PATH, f'{category_file_name}.txt')
+    
+    @classmethod
+    def load_all_models(cls): 
+        with cls._lock: 
+            cls._model_list = list(map(lambda x: os.path.splitext(os.path.basename(x))[0], DataLoader.get_all_files_from_dir(cls.MODEL_PATH, ".keras", ".h5")))
     
     @classmethod
     def get_model(cls, model_name = None): 
