@@ -13,6 +13,7 @@
      * @prop {Number} [outputWidth]
      * @prop {()=>void} [onDraw]
      * @prop {()=>void} [onWipe]
+     * @prop {function} children
      */
 
     /** @type {Props}*/
@@ -25,6 +26,7 @@
         scale = 10,
         onDraw = () => {},
         onWipe = () => {},
+        children
     } = $props();
 
     let resizeCanvas = document.createElement("canvas");
@@ -194,6 +196,9 @@
             <Checkbox id="preview_checkbox" bind:checked={preview} /><Label
                 for="preview_checkbox">Preview</Label
             >
+        </div>
+        <div>
+            {@render children()}
         </div>
         <div>
             <Button onclick={wipe}><RotateCcw /></Button>
