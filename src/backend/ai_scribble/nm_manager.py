@@ -25,7 +25,7 @@ class ModelManager:
     @classmethod
     def load_all_models(cls): 
         with cls._lock: 
-            cls._model_list = list(map(lambda x: os.path.splitext(os.path.basename(x))[0], DataLoader.get_all_files_from_dir(cls.MODEL_PATH, ".keras", ".h5")))
+            cls._model_list = list(map(lambda x: os.path.splitext(os.path.basename(x))[0], DataLoader.get_all_files_from_dir(cls.MODEL_PATH, ".keras")))
     
     @classmethod
     def get_model(cls, model_name = None): 
@@ -34,7 +34,13 @@ class ModelManager:
             if cls._neural_model.model_name_tag != model_name: 
                 cls._neural_model.load_model(cls.generate_path_model(model_name)) 
                 cls._current_model_name = cls._neural_model.model_name_tag
+                #cls.load_categories()
             return cls._neural_model
+        
+    @classmethod
+    def get_available_models(cls):
+        with cls._lock:
+            return cls._model_list
         
     @classmethod
     def load_categories(cls, categories_file_name = None): 
