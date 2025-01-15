@@ -10,5 +10,5 @@ class AiScribbleConfig(AppConfig):
         ModelManager.load_all_models()
         print(ModelManager._model_list)
         ModelManager.get_model('conv2D_mnist_low_training_augmented') # default loaded model 
-        ModelManager.load_categories('new_number_data') # default loaded data
+        ModelManager.load_categories() # default loaded data
         return super().ready()

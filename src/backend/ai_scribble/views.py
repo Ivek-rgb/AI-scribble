@@ -15,8 +15,8 @@ import json
 def process_request(request) -> Response:
     
     if request.method == 'GET':
-        #ModelManager.get_model(request.GET.get("model_name")) # process model change request  
-        return Response({"name": ModelManager.get_model().model_name_tag }) # test run for getting the model name correctly 
+        
+        return JsonResponse({ 'current-model': ModelManager.get_model().model_name_tag, 'models' : ModelManager.get_available_models()})
     
     elif request.method == 'POST':
         
@@ -30,13 +30,10 @@ def process_request(request) -> Response:
         
         print(output)
         
-        return Response({"prediction" : f"{ModelManager._categories_map[output.index(max(output))]}"  })
-    
+        return JsonResponse({"prediction" : f"{ModelManager._categories_map[output.index(max(output))]}"  })
 
-# TODO: implement function that reads trained categories and return's ones that 
 def get_random_label(request): 
     return Response()
 
-# TODO: function that will grab single data array and then feed it to model  
 def process_image_and_return_prediction(image_data): 
     return Response() 
