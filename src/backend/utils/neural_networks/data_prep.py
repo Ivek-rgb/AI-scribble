@@ -24,7 +24,7 @@ class DataLoader:
         if self.path != None: self.past_paths.append(self.path)
         self.path = new_path
     
-    def return_split_labels_data(self, transform_categories = False) -> tuple[np.ndarray, np.ndarray]:
+    def return_split_data_labels(self, transform_categories = False) -> tuple[np.ndarray, np.ndarray]:
         data, labels = (None, None)
         if not transform_categories:  
             data, labels = zip(*[(row["data"], row["label"]) for row in self.elements])
@@ -33,13 +33,14 @@ class DataLoader:
         return np.array(data), np.array(labels)
     
     @staticmethod
-    def determine_limit_range(limit : int, sized_obj : Sized) -> range: 
-        return range(min(limit, len(sized_obj)))
+    def get_all_files_from_dir(dir_path:str, *supported_extensions :str) -> list[str]: 
+        return DataLoader.get_files_from_dir(dir_path, math.inf, *supported_extensions)
     
     @staticmethod
-    def get_files_from_dir(dir_path: str, limit: int = math.inf) -> list[str]: 
-        listed_elements = [file for file in os.listdir(dir_path) if os.path.isfile(os.path.join(dir_path, file)) and os.path.splitext(file)[1] == '.npy']
-        fetched_files = [file for index, file in zip(DataLoader.determine_limit_range(limit, listed_elements), listed_elements)] 
+    def get_files_from_dir(dir_path: str, limit: int, *supported_extensions : str) -> list[str]: 
+        supported_extensions = set(supported_extensions)
+        listed_elements = [file for file in os.listdir(dir_path) if os.path.isfile(os.path.join(dir_path, file)) and os.path.splitext(file)[1] in supported_extensions]
+        fetched_files = listed_elements[:min(limit, len(listed_elements))] 
         return fetched_files
     
     @staticmethod
@@ -104,7 +105,7 @@ class DataLoader:
     
     def load_data_npy_dir(self, categories_save_filename: str | None, limit_files: int = math.inf, limit_data: int = math.inf, reshape_to_2828 : bool = False, append = True) -> list: 
         data = []
-        files = self.get_files_from_dir(self.path, limit_files)
+        files = self.get_files_from_dir(self.path, limit_files, ".npy", ".h5")
         for file in files:
             loaded_np_rep = DataLoader.load_npy_array_from_file(os.path.join(self.path, file), limit_data, (28,28,1) if reshape_to_2828 else None)
             label_str = file.split('_')[-1].split('.')[0]

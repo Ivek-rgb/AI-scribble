@@ -29,7 +29,6 @@ class NeuralModels:
     def equalize_list_lens(equalize: list, equalize_to_len: int, min_dif: int = 0, pattern_getter = lambda list: list[-1]): 
         while len(equalize) < equalize_to_len - min_dif: 
             equalize.append(pattern_getter(equalize))
-        
         return equalize 
     
     @staticmethod
