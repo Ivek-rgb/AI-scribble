@@ -2,7 +2,7 @@
     import { Button } from "$lib/components/ui/button";
     import { Checkbox } from "$lib/components/ui/checkbox";
     import { Label } from "$lib/components/ui/label";
-    import { RotateCcw } from "lucide-svelte";
+    import { RotateCcw, UndoIcon } from "lucide-svelte";
     import { onMount } from "svelte";
     /** @typedef {Object} Props
      * @prop {HTMLCanvasElement} [stateCanvas]
@@ -26,7 +26,7 @@
         scale = 10,
         onDraw = () => {},
         onWipe = () => {},
-        children
+        children,
     } = $props();
 
     let resizeCanvas = document.createElement("canvas");
@@ -44,6 +44,9 @@
      * @type {CanvasRenderingContext2D }
      */
     let targetContext;
+
+    /** @type {string[]} */
+    let undoStack = $state([]);
 
     /**
      * @type {CanvasRenderingContext2D }
@@ -78,6 +81,7 @@
 
     const drawStart = (/** @type {MouseEvent} */ e) => {
         previousMousePos = getMousePosition(targetCanvas, e);
+        undoStack.push(stateCanvas.toDataURL());
         drawing = true;
     };
     const drawEnd = (/** @type {MouseEvent} */ e) => {
@@ -154,8 +158,32 @@
 
     function wipe() {
         stateContext.fillRect(0, 0, stateCanvas.width, stateCanvas.height);
+        undoStack = [];
         onWipe();
         updateTargetCanvas();
+    }
+
+    function undo() {
+        let lastSrc = undoStack.pop();
+        if (!lastSrc) return;
+
+        let image = new Image();
+        image.src = lastSrc;
+
+        stateContext.drawImage(
+            image,
+            0,
+            0,
+            stateCanvas.width,
+            stateCanvas.height,
+        );
+        updateTargetCanvas();
+
+        if (undoStack.length) {
+            onDraw();
+        } else {
+            onWipe();
+        }
     }
 
     // Assign canvas context variables used through component
@@ -201,6 +229,9 @@
             {@render children()}
         </div>
         <div>
+            <Button disabled={undoStack.length === 0} onclick={undo}
+                ><UndoIcon /></Button
+            >
             <Button onclick={wipe}><RotateCcw /></Button>
         </div>
     </div>
@@ -218,7 +249,7 @@
             onmouseup={drawEnd}
             onmouseleave={drawEnd}
             onmousemove={draw}
-            class="border border-neutral-500 rounded-md relative"
+            class="border border-neutral-500 rounded-md relative bg-white"
         >
         </canvas>
     </div>
