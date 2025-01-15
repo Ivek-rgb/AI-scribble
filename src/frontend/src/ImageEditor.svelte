@@ -123,15 +123,20 @@
         // Clear user facing canvas
         targetContext.clearRect(0, 0, targetCanvas.width, targetCanvas.height);
 
-        let resizeContext = resizeCanvas.getContext("2d");
-        if (!resizeContext) return;
-
-        // Update resized image
-        resizeContext.fillRect(0, 0, resizeCanvas.width, resizeCanvas.height);
-        resizeContext.drawImage(stateImage, 0, 0, 28, 28);
-        resizedImage.src = resizeCanvas.toDataURL();
-
         if (preview) {
+            let resizeContext = resizeCanvas.getContext("2d");
+            if (!resizeContext) return;
+
+            // Update resized image
+            resizeContext.fillRect(
+                0,
+                0,
+                resizeCanvas.width,
+                resizeCanvas.height,
+            );
+            resizeContext.drawImage(stateImage, 0, 0, 28, 28);
+            resizedImage.src = resizeCanvas.toDataURL();
+
             // Draw scaled down image on user facing canvas
             targetContext.imageSmoothingEnabled = false;
 
