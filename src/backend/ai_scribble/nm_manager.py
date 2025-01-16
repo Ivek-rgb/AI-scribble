@@ -58,7 +58,6 @@ class ModelManager:
         cls._categories_map = DataLoader.load_categories_static(
             path, False)
 
-
     @classmethod
     def save_model(cls):
         with cls._lock:

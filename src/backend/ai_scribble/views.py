@@ -25,7 +25,6 @@ def process_guess_request(request) -> Response | JsonResponse:
         np_array = DataLoader.numpy_array_mapper(np_array, lambda x: x / 255)
         output = ModelManager.predict(np_array)
         output: list = output.tolist()[0]
-
         # print(output) debug print
 
         return JsonResponse(

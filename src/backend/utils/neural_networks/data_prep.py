@@ -8,6 +8,7 @@ from io import BytesIO
 from collections.abc import Sized
 from random import shuffle
 
+
 # 28*28 - image resolution, both for numbers and doodles   
 # data loader class with handful of image and array manipulation functions   
 
@@ -43,6 +44,7 @@ class DataLoader:
         listed_elements = [file for file in os.listdir(dir_path) if os.path.isfile(os.path.join(dir_path, file)) and os.path.splitext(file)[1] in supported_extensions]
         if shuffle_files : shuffle(listed_elements) 
         return listed_elements[:min(limit, len(listed_elements))]
+
     
     @staticmethod
     def handle_reshaping_array(start_array, reshape_dims : tuple[int, int, int] | None = None) -> np.ndarray: 
@@ -97,7 +99,8 @@ class DataLoader:
     @staticmethod
     def visualize_array(array): 
         img = DataLoader.convert_arr_to_img(array)
-        img.show(title="image_repo")
+        return img
+
     
     @staticmethod
     def deserialize_numbers_data(row : str):
