@@ -10,8 +10,6 @@ def custom_letter_deserialize(row: str):
     [letter, *rest] = map(lambda x: float(x), row.split(','))
     letter = chr(ord('a') + int(letter))
 
-
-
 def main():
     
     return     
