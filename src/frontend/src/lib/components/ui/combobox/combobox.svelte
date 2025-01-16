@@ -56,7 +56,7 @@
 			</Button>
 		{/snippet}
 	</Popover.Trigger>
-	<Popover.Content class="w-fit max-w-[400px] p-0">
+	<Popover.Content class="sm:w-fit max-w-[400px] p-0">
 		<Command.Root>
 			<Command.Input {placeholder} />
 			<Command.List>

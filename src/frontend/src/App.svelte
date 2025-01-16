@@ -32,7 +32,10 @@
             .then(() => {
                 if (prediction.length) sendForGuess();
             })
-            .catch(console.log);
+            .catch((e) => {
+                console.log(e);
+                fetchModels();
+            });
     }
 
     function fetchModels() {
@@ -112,10 +115,29 @@
     });
 </script>
 
+<svelte:head>
+    {#if prediction.length}
+        <title>{prettify(prediction)} - AI Scribble</title>
+    {:else}
+        <title>AI Scribble</title>
+    {/if}
+</svelte:head>
+
 <main class="bg-neutral-900 text-white w-screen min-h-screen max-w-screen">
     <div class="flex flex-col justify-center items-center w-full">
-        <div class="text-7xl font-bold mt-8">
-            {@html prediction?.length ? prediction : "&nbsp;"}
+        <div
+            class="flex justify-center items-center h-[70px] md:h-[90px] lg:h-[110px]"
+        >
+            <div
+                data-largetext={prediction?.length > 15}
+                class="text-5xl md:text-6xl lg:text-7xl
+            data-[largetext=true]:text-4xl
+            data-[largetext=true]:md:text-5xl
+            data-[largetext=true]:lg:text-6xl
+            font-bold mt-8"
+            >
+                {@html prediction.length ? prettify(prediction) : "&nbsp;"}
+            </div>
         </div>
         <ImageEditor
             stateImage={imageToSend}

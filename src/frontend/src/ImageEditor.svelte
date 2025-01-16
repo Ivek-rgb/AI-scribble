@@ -182,7 +182,7 @@
             stateCanvas.width,
             stateCanvas.height,
         );
-        updateTargetCanvas();
+        setTimeout(updateTargetCanvas, 5);
 
         if (undoStack.length) {
             onDraw();
@@ -224,16 +224,21 @@
 </script>
 
 <div class="w-full h-fit p-4 max-w-screen-sm relative overflow-clip">
-    <div class="flex items-center justify-between mb-4">
-        <div>
+    <div class="sm:hidden mb-4 w-fit mx-auto">
+        {@render children()}
+    </div>
+    <div
+        class="flex justify-center sm:grid sm:grid-cols-3 items-center gap-x-8  gap-y-4 sm:justify-between mb-4"
+    >
+        <div class="w-fit text-right sm:text-left flex items-center gap-x-2">
             <Checkbox id="preview_checkbox" bind:checked={preview} /><Label
                 for="preview_checkbox">Preview</Label
             >
         </div>
-        <div>
+        <div class="hidden sm:block mx-auto w-fit">
             {@render children()}
         </div>
-        <div>
+        <div class="sm:w-full text-left sm:text-right">
             <Button disabled={undoStack.length === 0} onclick={undo}
                 ><UndoIcon /></Button
             >
