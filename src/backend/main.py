@@ -20,7 +20,7 @@ def main():
     
     print(len(data_test_loader.categories))
     
-    imageScroller = ImageScroller()
+    ImageScroller()
 
     return 
     neural_model.change_model_name("conv2d_emnist_letters_augmented_1")
