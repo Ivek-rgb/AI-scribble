@@ -1,7 +1,10 @@
 from utils.neural_networks.data_prep import DataLoader
 from utils.neural_networks.neural_models import NeuralModels
 from functools import reduce
+import tkinter
+from PIL import ImageTk, Image 
 import numpy as np
+from utils.image_scroller import ImageScroller
 
 def custom_letter_deserialize(row: str): 
     [letter, *rest] = map(lambda x: float(x), row.split(','))
@@ -17,6 +20,8 @@ def main():
     
     print(len(data_test_loader.categories))
     
+    imageScroller = ImageScroller()
+
     return 
     neural_model.change_model_name("conv2d_emnist_letters_augmented_1")
     

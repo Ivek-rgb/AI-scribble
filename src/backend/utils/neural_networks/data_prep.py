@@ -96,7 +96,8 @@ class DataLoader:
     @staticmethod
     def visualize_array(array): 
         img = DataLoader.convert_arr_to_img(array)
-        img.show(title="image_repo")
+        #img.show(title="image_repo")
+        return img
     
     @staticmethod
     def deserialize_numbers_data(row : str):
