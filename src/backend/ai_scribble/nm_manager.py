@@ -43,7 +43,7 @@ class ModelManager:
                 cls._neural_model.load_model(
                     cls.generate_path_model(model_name))
                 cls._current_model_name = cls._neural_model.model_name_tag
-                # cls.load_categories()
+                cls.load_categories()
             return cls._neural_model
 
     @classmethod
@@ -53,11 +53,10 @@ class ModelManager:
 
     @classmethod
     def load_categories(cls, categories_file_name=None):
-        with cls._lock:
-            path = cls.generate_path_categories(
-                categories_file_name if categories_file_name else cls._neural_model.model_name_tag)
-            cls._categories_map = DataLoader.load_categories_static(
-                path, False)
+        path = cls.generate_path_categories(
+            categories_file_name if categories_file_name else cls._neural_model.model_name_tag)
+        cls._categories_map = DataLoader.load_categories_static(
+            path, False)
 
     @classmethod
     def save_model(cls):

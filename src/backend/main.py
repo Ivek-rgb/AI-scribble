@@ -1,6 +1,11 @@
 from utils.neural_networks.data_prep import DataLoader
 from utils.neural_networks.neural_models import NeuralModels
 from functools import reduce
+import numpy as np
+import json 
+import re
+import ast
+
 import tkinter
 from PIL import ImageTk, Image 
 import numpy as np
@@ -12,15 +17,14 @@ def custom_letter_deserialize(row: str):
     return [letter, rest]
 
 def main():
-    
+    ImageScroller()
+
     data_test_loader = DataLoader('../../data/training-set/doodles_data/')
     data_test_loader.load_data_npy_dir(None, 10, 5, True)
     
     data, labels = data_test_loader.return_split_data_labels(False)
     
     print(len(data_test_loader.categories))
-    
-    ImageScroller()
 
     return 
     neural_model.change_model_name("conv2d_emnist_letters_augmented_1")
