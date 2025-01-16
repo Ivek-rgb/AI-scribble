@@ -9,10 +9,12 @@ import ast
 def custom_letter_deserialize(row: str): 
     [letter, *rest] = map(lambda x: float(x), row.split(','))
     letter = chr(ord('a') + int(letter))
-    return [letter, rest]
+
+
 
 def main():
     
+    return     
     neural_model = NeuralModels()
     neural_model.change_model_name("conv2d_scribble_50_categories_augmented_1")
     
@@ -28,6 +30,14 @@ def main():
 
     neural_model.fit(train_x, train_y, epochs=30, batch_size=16, verbose=1)
     neural_model.save_model() 
+=======
+    data_test_loader = DataLoader('../../data/training-set/doodles_data/')
+    data_test_loader.load_data_npy_dir(None, 10, 5, True)
+    
+    data, labels = data_test_loader.return_split_data_labels(False)
+    
+    print(len(data_test_loader.categories))
+>>>>>>> 893b92634566a83dd5e99a9754553bf9bd932353
     
     return 
     neural_model.change_model_name("conv2d_emnist_letters_augmented_1")
