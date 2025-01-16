@@ -1,6 +1,7 @@
 data/training-set/doodles_data/*
 data/training-set/number_data/* 
 data/training-set/letters_data/*
+data/training-set/doodles_csv/*
 
 .env
 .env/
