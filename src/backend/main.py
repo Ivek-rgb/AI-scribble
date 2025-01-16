@@ -2,20 +2,32 @@ from utils.neural_networks.data_prep import DataLoader
 from utils.neural_networks.neural_models import NeuralModels
 from functools import reduce
 import numpy as np
+import json 
+import re
+import ast
 
 def custom_letter_deserialize(row: str): 
     [letter, *rest] = map(lambda x: float(x), row.split(','))
-    letter = chr(ord('a') + int(letter) - 1)
+    letter = chr(ord('a') + int(letter))
     return [letter, rest]
 
 def main():
     
-    data_test_loader = DataLoader('../../data/training-set/doodles_data/')
-    data_test_loader.load_data_npy_dir(None, 10, 5, True)
+    neural_model = NeuralModels()
+    neural_model.change_model_name("conv2d_scribble_50_categories_augmented_1")
     
-    data, labels = data_test_loader.return_split_data_labels(False)
+    train_data_loader = DataLoader('../../data/training-set/doodles_data/')
+    train_data_loader.load_data_npy_dir(neural_model.model_name_tag, 50, reshape_to_2828=True, shuffle_files=True)
     
-    print(len(data_test_loader.categories))
+    train_data_loader.map_data(lambda x: x / 255)
+    train_x, train_y = train_data_loader.return_split_data_labels(True)
+
+    neural_model.conv2D_model((28, 28, 1), (16, 32, 64), [(6,6), (5,5)], (2,2), ["relu", "relu", "relu", "relu", "relu", "softmax"], (256, 512, len(train_data_loader.categories)), [0.25, 0.25]) 
+    neural_model.set_augmentation_datagen(width_shift=0.1, height_shift=0.1, rotation_level_deg=5)
+    neural_model.model_compile()
+
+    neural_model.fit(train_x, train_y, epochs=30, batch_size=16, verbose=1)
+    neural_model.save_model() 
     
     return 
     neural_model.change_model_name("conv2d_emnist_letters_augmented_1")

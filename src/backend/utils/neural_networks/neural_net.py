@@ -79,8 +79,6 @@ class ToyNeuralNetwork:
         self.bias_h =  [ np.random.uniform(-1, 1, size=(i, 1)) for i in self.num_h ]
         self.bias_o = np.random.uniform(-1, 1, size=(self.num_o, 1))
         
-    
-    # TODO: add softmax function for clamping data to percentages 
     @staticmethod
     def softmax(values : np.ndarray) -> np.ndarray: 
     
@@ -111,7 +109,7 @@ class ToyNeuralNetwork:
         
         for i in range(len(self.weights_hh)): 
             h_value = self.vec_func((self.weights_hh[i] @ h_value) + self.bias_h[i + 1])
-            h_value = self.dropout(h_value, 0.001) # TODO: add dropout range to shizzle fadizzle 
+            h_value = self.dropout(h_value, 0.001)  
             activations.append(h_value)
         
         activations.append(self.vec_func((self.weights_ho @ h_value) + self.bias_o))

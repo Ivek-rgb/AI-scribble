@@ -6,6 +6,7 @@ import numpy as np
 from PIL import Image, ImageEnhance, ImageOps
 from io import BytesIO
 from collections.abc import Sized
+from random import shuffle
 
 # 28*28 - image resolution, both for numbers and doodles   
 # data loader class with handful of image and array manipulation functions   
@@ -37,11 +38,11 @@ class DataLoader:
         return DataLoader.get_files_from_dir(dir_path, math.inf, *supported_extensions)
     
     @staticmethod
-    def get_files_from_dir(dir_path: str, limit: int, *supported_extensions : str) -> list[str]: 
+    def get_files_from_dir(dir_path: str, limit: int, *supported_extensions : str, shuffle_files : bool = False) -> list[str]: 
         supported_extensions = set(supported_extensions)
         listed_elements = [file for file in os.listdir(dir_path) if os.path.isfile(os.path.join(dir_path, file)) and os.path.splitext(file)[1] in supported_extensions]
-        fetched_files = listed_elements[:min(limit, len(listed_elements))] 
-        return fetched_files
+        if shuffle_files : shuffle(listed_elements) 
+        return listed_elements[:min(limit, len(listed_elements))]
     
     @staticmethod
     def handle_reshaping_array(start_array, reshape_dims : tuple[int, int, int] | None = None) -> np.ndarray: 
@@ -103,9 +104,13 @@ class DataLoader:
         number_label, *data = map( lambda x : float(x), row.split(','))
         return [number_label, data]
     
-    def load_data_npy_dir(self, categories_save_filename: str | None, limit_files: int = math.inf, limit_data: int = math.inf, reshape_to_2828 : bool = False, append = True) -> list: 
+    
+    def shuffle_elements(self):
+        self.elements = shuffle(self.elements) 
+    
+    def load_data_npy_dir(self, categories_save_filename: str | None, limit_files: int = math.inf, limit_data: int = math.inf, reshape_to_2828 : bool = False, shuffle_files = False, append = True) -> list: 
         data = []
-        files = self.get_files_from_dir(self.path, limit_files, ".npy", ".h5")
+        files = self.get_files_from_dir(self.path, limit_files, ".npy", ".h5", shuffle_files=shuffle_files)
         for file in files:
             loaded_np_rep = DataLoader.load_npy_array_from_file(os.path.join(self.path, file), limit_data, (28,28,1) if reshape_to_2828 else None)
             label_str = file.split('_')[-1].split('.')[0]
