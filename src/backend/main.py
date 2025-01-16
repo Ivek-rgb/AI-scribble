@@ -18,6 +18,8 @@ def custom_letter_deserialize(row: str):
 
 def main():
     ImageScroller()
+    
+    return 
 
     data_test_loader = DataLoader('../../data/training-set/doodles_data/')
     data_test_loader.load_data_npy_dir(None, 10, 5, True)
